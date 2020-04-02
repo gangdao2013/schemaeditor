@@ -1,11 +1,15 @@
-from tkinter import Canvas
-from LineItem import DeriveLineItem
+from tkinter import *
+from tkinter import ttk
+
 from CurrState import *
+import AttrEditor
 
 # 类的图元
 class ClsItem(object):
 
     def __init__(self, Canvas, clsName, position):
+        self.attrs = []
+        self.attrs.append(['a', 'b', 'c'])
         self.__outLns = []  # 以本图元为起始的连接线
         self.__inLins = []  # 以本图元为终止的连接线
         self.__canvas=Canvas
@@ -14,6 +18,7 @@ class ClsItem(object):
         self.__rect=self.__canvas.create_rectangle(x1-2,y1-2,x2+2,y2+2,fill='white',activefill='red')
         self.__canvas.lift(self.__txt)
         Canvas.tag_bind(self.__txt, "<B1-Motion>",self.onMove)
+        Canvas.tag_bind(self.__txt, "<Double-Button-1>",self.on_edit_attr)
 
     def isMine(self,itemId):
         return itemId==self.__txt or itemId==self.__rect
@@ -47,4 +52,6 @@ class ClsItem(object):
             for line in self.__outLns:
                 line.setStart(nowAnchor[0], nowAnchor[1])
 
-
+    def on_edit_attr(self, event):
+        dlg = AttrEditor.AttrEditor(self.__canvas, self.attrs)
+        dlg.grab_set()
