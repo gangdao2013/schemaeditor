@@ -12,7 +12,7 @@ class CurrState:
 
     @classmethod
     def init(cls):
-        if cls.__ins == None:
+        if cls.__ins is None:
             cls.__ins = cls()
         return cls.__ins
 

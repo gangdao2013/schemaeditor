@@ -5,8 +5,10 @@ from CurrState import *
 import AttrEditor
 
 # 类的图元
-class ClsItem(object):
+from LineItem import LineType
 
+
+class ClsItem(object):
     def __init__(self, Canvas, clsName, position):
         self.attrs = []
         self.__outLns = []  # 以本图元为起始的连接线
@@ -60,11 +62,20 @@ class ClsItem(object):
                 line.on_srcordst_moved()
 
     def on_edit_attr(self, event):
-        dlg = AttrEditor.AttrEditor(self.__canvas, self.attrs)
+        dlg = AttrEditor.AttrEditor(self.__canvas, self.get_attrs_r())
         dlg.grab_set()
 
-    def get_attrs(self):
+    def get_attrs(self): # 获取属性，仅自身属性
         return self.attrs
+
+    def get_attrs_r(self): # 获取属性，包括各级父类属性
+        attrs=[]
+        # 取出父类的属性
+        for line in self.__outLns:
+            if line.type() is LineType.derive:
+                attrs.extend(line.dst.get_attrs_r())
+        attrs.extend(self.attrs)
+        return attrs
 
     def add_attr(self, attr):
         self.attrs.append(attr)

@@ -46,6 +46,15 @@ class AttrEditor(Toplevel):
     def show_attrs(self):
         for i in self.attrs:
             self.tv.insert(parent='', index='end', values=i)
+        self.tv.bind('<Button-1>', self.on_edit_attr)
+
+    def on_edit_attr(self, event):
+        item = self.tv.identify_row(event.y)
+        row = self.tv.index(item)
+        col = int(self.tv.identify_column(event.x).strip('#')) - 1
+        self.xls_text.set(self.attrs[row][0])
+        self.comb_type.set(self.attrs[row][1])
+        self.comb_size.set(self.attrs[row][2])
 
     def on_add(self):
         val = [self.xls_text.get(), self.comb_type.get(), self.comb_size.get()]
