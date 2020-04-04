@@ -123,19 +123,18 @@ class MainWin(object):
         dstCls.addInLns(linkLine)
         linkLine.setSrc(srcCls)
         linkLine.setDst(dstCls)
+        # 重置连接线端点
+        linkLine.on_srcordst_moved()
         self.lnItems.append(linkLine)
 
     def onLBtnRelease(self, event):
         if CurrState.mode == EditMode.select:
             return
-        if self.startCls != None:
+        if self.startCls and self.currLn:
             items = list(self.cv.find_overlapping(event.x - 1, event.y - 1, event.x + 1, event.y + 1))
-            if self.currLn:# 排除当前连接线
-                items.remove(self.currLn.getItemId())
-
+            items.remove(self.currLn.getItemId())
             if len(items) == 0: #未连接到图元，删除连接线
-                if self.currLn:
-                    self.currLn.delMe()
+                self.currLn.delMe()
             else:
                 for id in items:
                     bFind=False
@@ -143,12 +142,6 @@ class MainWin(object):
                         if clsItem.isMine(id):
                             bFind=True
                             if self.startCls != clsItem:
-                                end=clsItem.getAnchor()
-                                if self.currLn:
-                                    self.currLn.setEnd(end[0], end[1])
-                                else:
-                                    start = self.startCls.getAnchor()
-                                    self.currLn=self.createLineItem(start[0], start[1], end[0], end[1])
                                 # 建立链接
                                 self.createLink(self.startCls, clsItem, self.currLn)
                             break
@@ -160,10 +153,9 @@ class MainWin(object):
     def onLBtnMove(self, event):
         if CurrState.mode == EditMode.select:
             return
-        if self.startCls != None:
-            global currLn
+        if self.startCls is not None:
             if self.currLn:
-                self.currLn.setEnd(event.x, event.y)
+                self.currLn.on_end_moved(self.startCls, event.x, event.y)
             else:
                 start = self.startCls.getAnchor()
                 self.currLn = self.createLineItem(start[0], start[1], event.x, event.y)

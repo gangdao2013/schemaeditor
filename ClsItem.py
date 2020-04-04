@@ -26,6 +26,14 @@ class ClsItem(object):
         (x1, y1, x2, y2) = self.__canvas.bbox(self.__rect)
         return (x1 + (x2 - x1) / 2), y1
 
+    def get_anchors(self): #所有可连接点
+        (x1, y1, x2, y2) = self.__canvas.bbox(self.__rect)
+        top = x1 + (x2 - x1) / 2, y1
+        bottom = x1 + (x2 - x1) / 2, y2
+        left = x1, y1 + (y2-y1) / 2
+        right = x2, y1 + (y2-y1) / 2
+        return [top, bottom, left, right]
+
     def getPos(self):
         x1, y1 = self.__canvas.coords(self.__txt)
         return x1, y1
@@ -47,9 +55,9 @@ class ClsItem(object):
             # 连接线跟随
             nowAnchor = self.getAnchor()
             for line in self.__inLins:
-                line.setEnd(nowAnchor[0], nowAnchor[1])
+                line.on_srcordst_moved()
             for line in self.__outLns:
-                line.setStart(nowAnchor[0], nowAnchor[1])
+                line.on_srcordst_moved()
 
     def on_edit_attr(self, event):
         dlg = AttrEditor.AttrEditor(self.__canvas, self.attrs)
