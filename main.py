@@ -23,9 +23,9 @@ class MainWin(object):
 
         self.cv = Canvas(self.root, width=1000, height=500, background='white')
         self.cv.pack()
-        openbn = Button(self.root, text='打开', command=self.open)
+        openbn = Button(self.root, text='打开', command=self.on_open)
         openbn.pack(side=LEFT, ipadx=10, ipady=5, padx=3)
-        savebn = Button(self.root, text='保存', command=self.save)
+        savebn = Button(self.root, text='保存', command=self.on_save)
         savebn.pack(side=LEFT, ipadx=10, ipady=5, padx=3)
 
         selbn = Button(self.root, text='选择', command=self.onSelect)
@@ -142,14 +142,15 @@ class MainWin(object):
                     for clsItem in self.clsItems:
                         if clsItem.isMine(id):
                             bFind=True
-                            end=clsItem.getAnchor()
-                            if self.currLn:
-                                self.currLn.setEnd(end[0], end[1])
-                            else:
-                                start = self.startCls.getAnchor()
-                                self.currLn=self.createLineItem(start[0], start[1], end[0], end[1])
-                            # 建立链接
-                            self.createLink(self.startCls, clsItem, self.currLn)
+                            if self.startCls != clsItem:
+                                end=clsItem.getAnchor()
+                                if self.currLn:
+                                    self.currLn.setEnd(end[0], end[1])
+                                else:
+                                    start = self.startCls.getAnchor()
+                                    self.currLn=self.createLineItem(start[0], start[1], end[0], end[1])
+                                # 建立链接
+                                self.createLink(self.startCls, clsItem, self.currLn)
                             break
                     if bFind:
                         break
@@ -167,7 +168,7 @@ class MainWin(object):
                 start = self.startCls.getAnchor()
                 self.currLn = self.createLineItem(start[0], start[1], event.x, event.y)
 
-    def save(self):
+    def on_save(self):
         f = open('classcharm.txt', 'w')
         f.write('@类名:x,y\n')
         for cls in self.clsItems:
@@ -178,8 +179,33 @@ class MainWin(object):
         for line in self.lnItems:
             f.write('%s:%s-%s\n' % (line.type().value, line.src.getName(), line.dst.getName()))
         f.flush()
+        f.close()
+        self.save_attr()
 
-    def open(self):
+    def save_attr(self):
+        f = open('classattr.txt', 'w')
+        f.write('@类名,属性名,类型,大小\n')
+        for cls in self.clsItems:
+            for attr in cls.get_attrs():
+                f.write('%s,%s,%s,%s\n' % (cls.getName(), attr[0], attr[1], attr[2]))
+        f.flush()
+        f.close()
+
+    def open_attr(self, clsname_item):
+        f = open('classattr.txt', 'r')
+        content = f.readlines()
+        i = 0
+        for line in content:
+            if i > 0: # 实际内容
+                line = line.strip('\n')
+                strs = line.split(',')
+                cls=strs[0]
+                attr=[strs[1], strs[2], strs[3]]
+                clsname_item[cls].add_attr(attr)
+            i += 1
+        f.close()
+
+    def on_open(self):
         f = open('classcharm.txt', 'r')
         content = f.readlines()
         contentType = 0
@@ -207,6 +233,8 @@ class MainWin(object):
                 endPos=dstCls.getAnchor()
                 lnItem =self.__createLineItem(LineType(lt), startPos[0], startPos[1],endPos[0],endPos[1])
                 self.createLink(srcCls, dstCls, lnItem)
+        f.close()
+        self.open_attr(clsname_item)
 
 if __name__ == '__main__':
     CurrState.init()

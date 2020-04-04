@@ -54,3 +54,9 @@ class ClsItem(object):
     def on_edit_attr(self, event):
         dlg = AttrEditor.AttrEditor(self.__canvas, self.attrs)
         dlg.grab_set()
+
+    def get_attrs(self):
+        return self.attrs
+
+    def add_attr(self, attr):
+        self.attrs.append(attr)
