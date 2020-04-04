@@ -66,7 +66,7 @@ class MainWin(object):
             self.createClsItem(xls_text.get(), self.currPos)
             dlg.destroy()
 
-        Button(dlg, text="创建", command = on_click).pack()
+        Button(dlg, text="创建", command=on_click).pack()
         dlg.grab_set()
 
     def onDerive(self):
@@ -171,19 +171,19 @@ class MainWin(object):
         f = open('classcharm.txt', 'w')
         f.write('@类名:x,y\n')
         for cls in self.clsItems:
-            x,y = cls.getPos()
-            f.write('%s:%s,%s\n'%(cls.getName(),x,y))
+            x, y = cls.getPos()
+            f.write('%s:%s,%s\n' % (cls.getName(), x, y))
 
         f.write('@关系:首-末\n')
         for line in self.lnItems:
-            f.write('%s:%s-%s\n'%(line.type().value, line.src.getName(),line.dst.getName()))
+            f.write('%s:%s-%s\n' % (line.type().value, line.src.getName(), line.dst.getName()))
         f.flush()
 
     def open(self):
-        f=open('classcharm.txt', 'r')
-        content=f.readlines()
-        contentType=0
-        clsname_item={}
+        f = open('classcharm.txt', 'r')
+        content = f.readlines()
+        contentType = 0
+        clsname_item = {}
         for i in content:
             i=i.strip('\n')
             if i.startswith('@类名'):

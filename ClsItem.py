@@ -9,7 +9,6 @@ class ClsItem(object):
 
     def __init__(self, Canvas, clsName, position):
         self.attrs = []
-        self.attrs.append(['a', 'b', 'c'])
         self.__outLns = []  # 以本图元为起始的连接线
         self.__inLins = []  # 以本图元为终止的连接线
         self.__canvas=Canvas
