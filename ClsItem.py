@@ -62,19 +62,20 @@ class ClsItem(object):
                 line.on_srcordst_moved()
 
     def on_edit_attr(self, event):
-        dlg = AttrEditor.AttrEditor(self.__canvas, self.get_attrs_r())
+        dlg = AttrEditor.AttrEditor(self.__canvas, self.attrs, self.get_attrs_r(False))
         dlg.grab_set()
 
     def get_attrs(self): # 获取属性，仅自身属性
         return self.attrs
 
-    def get_attrs_r(self): # 获取属性，包括各级父类属性
+    def get_attrs_r(self, containself=True): # 获取属性，包括各级父类属性
         attrs=[]
         # 取出父类的属性
         for line in self.__outLns:
             if line.type() is LineType.derive:
                 attrs.extend(line.dst.get_attrs_r())
-        attrs.extend(self.attrs)
+        if containself:
+            attrs.extend(self.attrs)
         return attrs
 
     def add_attr(self, attr):
