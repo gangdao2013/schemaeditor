@@ -21,24 +21,25 @@ class MainWin(object):
         self.clsItems=[]
         self.lnItems=[]
 
+        frame = Frame(self.root)
+        openbn = Button(frame, text='打开', command=self.on_open)
+        openbn.pack(side=TOP, ipadx=10, ipady=5, pady=3)
+        savebn = Button(frame, text='保存', command=self.on_save)
+        savebn.pack(side=TOP, ipadx=10, ipady=5, pady=33)
+
+        self.selbn = Button(frame, text='选择', command=self.onSelect)
+        self.selbn.pack(side=TOP, ipadx=10, ipady=5, pady=3)
+
+        self.derivebn = Button(frame, text='派生', fg='blue', command=self.onDerive)
+        self.derivebn.pack(side=TOP, ipadx=10, ipady=5, pady=3)
+
+        self.assbn = Button(frame, text='关联', fg='green', command=self.onAss)
+        self.assbn.pack(side=TOP, ipadx=10, ipady=5, pady=3)
+
+        frame.pack(side=LEFT, expand=FALSE)
+
         self.cv = Canvas(self.root, width=1000, height=500, background='white')
-        self.cv.pack()
-        openbn = Button(self.root, text='打开', command=self.on_open)
-        openbn.pack(side=LEFT, ipadx=10, ipady=5, padx=3)
-        savebn = Button(self.root, text='保存', command=self.on_save)
-        savebn.pack(side=LEFT, ipadx=10, ipady=5, padx=3)
-
-        selbn = Button(self.root, text='选择', command=self.onSelect)
-        selbn.pack(side=LEFT, ipadx=10, ipady=5, padx=3)
-
-        derivebn = Button(self.root, text='派生', fg='blue', command=self.onDerive)
-        derivebn.pack(side=LEFT, ipadx=10, ipady=5, padx=3)
-
-        derivebn = Button(self.root, text='关联', fg='green', command=self.onAss)
-        derivebn.pack(side=LEFT, ipadx=10, ipady=5, padx=3)
-
-        self.stateLabel = Label(self.root, text='选择')
-        self.stateLabel.pack(side=RIGHT)
+        self.cv.pack(side=RIGHT, fill=BOTH, expand=TRUE)
 
         self.menubar.add_command(label='新增', command=self.createClass)
         # 画布与鼠标左键进行绑定
@@ -71,15 +72,21 @@ class MainWin(object):
 
     def onDerive(self):
         CurrState.mode = EditMode.derive
-        self.stateLabel['text'] = '派生'
+        self.selbn['bg'] = 'gray'
+        self.derivebn['bg'] = 'white'
+        self.assbn['bg'] = 'gray'
 
     def onAss(self):
         CurrState.mode = EditMode.ass
-        self.stateLabel['text'] = '关联'
+        self.selbn['bg'] = 'gray'
+        self.derivebn['bg'] = 'gray'
+        self.assbn['bg'] = 'white'
 
     def onSelect(self):
         CurrState.mode = EditMode.select
-        self.stateLabel['text'] = '选择'
+        self.selbn['bg'] = 'white'
+        self.derivebn['bg'] = 'gray'
+        self.assbn['bg'] = 'gray'
 
     def onContextMenu(self, event):
         ids=self.cv.find_overlapping(event.x-1,event.y-1,event.x+1, event.y+1)
