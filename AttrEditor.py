@@ -41,7 +41,7 @@ class AttrEditor(Toplevel):
         xls.pack(side=LEFT, ipadx=5)
 
         Label(frame2, text="类型：").pack(side=LEFT, ipadx=5)
-        self.comb_type = ttk.Combobox(frame2, values=['int', 'long', 'string'])
+        self.comb_type = ttk.Combobox(frame2, values=['bool', 'short', 'int', 'long', 'float', 'string'])
         self.comb_type.pack(side=LEFT, ipadx=5)
         self.comb_type.current(0)
         self.comb_type.bind('<<ComboboxSelected>>', self.on_type_selected)
@@ -117,7 +117,10 @@ class AttrEditor(Toplevel):
 
     def on_type_selected(self, event=None):
         if self.comb_type.get() == 'string':
-            self.comb_size.config(values=['31', '63', '127'], state='normal')
+            size=[1]
+            for i in range(4, 12):
+                size.append((1 << i) - 1)
+            self.comb_size.config(values=size, state='normal')
             self.comb_size.current(0)
         else:
             self.comb_size.config(values=[''], state='disabled')
