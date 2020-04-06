@@ -8,18 +8,13 @@ from tkinter import *
 from ClsItem import *
 from LineItem import *
 from CurrState import *
+from Document import *
 
 class MainWin(object):
     def __init__(self):
         self.root = Tk()
-        self.menubar = Menu(self.root, tearoff=True)
-        self.currPos=10,10
-
         self.currLn=None
         self.startCls=None
-
-        self.clsItems=[]
-        self.lnItems=[]
 
         frame = Frame(self.root)
         openbn = Button(frame, text='打开', command=self.on_open)
@@ -39,8 +34,11 @@ class MainWin(object):
         frame.pack(side=LEFT, expand=FALSE)
 
         self.cv = Canvas(self.root, width=1000, height=500, background='white')
+        Document.canvas = self.cv
         self.cv.pack(side=RIGHT, fill=BOTH, expand=TRUE)
 
+        self.menubar = Menu(self.root, tearoff=True)
+        self.currPos=10,10
         self.menubar.add_command(label='新增', command=self.createClass)
         # 画布与鼠标左键进行绑定
         self.cv.bind_all("<Button-3>", self.onContextMenu)
@@ -64,7 +62,7 @@ class MainWin(object):
         xls.pack()
 
         def on_click():
-            self.createClsItem(xls_text.get(), self.currPos)
+            Document.create_clsitem(xls_text.get(), self.currPos)
             dlg.destroy()
 
         Button(dlg, text="创建", command=on_click).pack()
@@ -72,21 +70,21 @@ class MainWin(object):
 
     def onDerive(self):
         CurrState.mode = EditMode.derive
-        self.selbn['bg'] = 'gray'
-        self.derivebn['bg'] = 'white'
-        self.assbn['bg'] = 'gray'
-
-    def onAss(self):
-        CurrState.mode = EditMode.ass
-        self.selbn['bg'] = 'gray'
+        self.selbn['bg'] = 'white'
         self.derivebn['bg'] = 'gray'
         self.assbn['bg'] = 'white'
 
+    def onAss(self):
+        CurrState.mode = EditMode.ass
+        self.selbn['bg'] = 'white'
+        self.derivebn['bg'] = 'white'
+        self.assbn['bg'] = 'gray'
+
     def onSelect(self):
         CurrState.mode = EditMode.select
-        self.selbn['bg'] = 'white'
-        self.derivebn['bg'] = 'gray'
-        self.assbn['bg'] = 'gray'
+        self.selbn['bg'] = 'gray'
+        self.derivebn['bg'] = 'white'
+        self.assbn['bg'] = 'white'
 
     def onContextMenu(self, event):
         ids=self.cv.find_overlapping(event.x-1,event.y-1,event.x+1, event.y+1)
@@ -95,19 +93,9 @@ class MainWin(object):
             self.menubar.post(event.x_root, event.y_root)
 
     def onLBtnPress(self, event):
-        if CurrState.mode == EditMode.select:
-            return
-        ids=self.cv.find_overlapping(event.x-1,event.y-1,event.x+1, event.y+1)
-        for id in ids:
-            for clsItem in self.clsItems:
-                if clsItem.isMine(id):
-                    self.startCls = clsItem
-                    return
-
-    def createClsItem(self, clsName, pos):
-        item = ClsItem(self.cv, clsName, pos)
-        self.clsItems.append(item)
-        return item
+        if CurrState.mode != EditMode.select:
+            ids=self.cv.find_overlapping(event.x-1,event.y-1,event.x+1, event.y+1)
+            self.startCls = Document.get_cls_fromids(ids)
 
     def createLineItem(self, x1, y1, x2, y2):
         line_type=LineType.invalid
@@ -115,45 +103,20 @@ class MainWin(object):
             line_type=LineType.derive
         elif CurrState.mode == EditMode.ass:
             line_type=LineType.ass
-        return self.__createLineItem(line_type, x1, y1, x2, y2)
-
-    def __createLineItem(self, line_type, x1, y1, x2, y2):
-        if line_type == LineType.derive:
-            return DeriveLineItem(self.cv, x1, y1, x2, y2)
-        elif line_type == LineType.ass:
-            return AssLineItem(self.cv, x1, y1, x2, y2)
-        else:
-            return None
-
-    def createLink(self, srcCls, dstCls, linkLine):
-        srcCls.addOutLns(linkLine)
-        dstCls.addInLns(linkLine)
-        linkLine.setSrc(srcCls)
-        linkLine.setDst(dstCls)
-        # 重置连接线端点
-        linkLine.on_srcordst_moved()
-        self.lnItems.append(linkLine)
+        return Document.createLineItem(line_type, x1, y1, x2, y2)
 
     def onLBtnRelease(self, event):
         if CurrState.mode == EditMode.select:
             return
         if self.startCls and self.currLn:
-            items = list(self.cv.find_overlapping(event.x - 1, event.y - 1, event.x + 1, event.y + 1))
-            items.remove(self.currLn.getItemId())
-            if len(items) == 0: #未连接到图元，删除连接线
+            ids = list(self.cv.find_overlapping(event.x - 1, event.y - 1, event.x + 1, event.y + 1))
+            ids.remove(self.currLn.getItemId())
+            if len(ids) == 0: #未连接到图元，删除连接线
                 self.currLn.delMe()
             else:
-                for id in items:
-                    bFind=False
-                    for clsItem in self.clsItems:
-                        if clsItem.isMine(id):
-                            bFind=True
-                            if self.startCls != clsItem:
-                                # 建立链接
-                                self.createLink(self.startCls, clsItem, self.currLn)
-                            break
-                    if bFind:
-                        break
+                dstcls = Document.get_cls_fromids(ids)
+                if self.startCls != dstcls: # 建立链接
+                    Document.createLink(self.startCls, dstcls, self.currLn)
         self.currLn=None
         self.startCls=None
 
@@ -168,27 +131,8 @@ class MainWin(object):
                 self.currLn = self.createLineItem(start[0], start[1], event.x, event.y)
 
     def on_save(self):
-        f = open('classcharm.txt', 'w')
-        f.write('@类名:x,y\n')
-        for cls in self.clsItems:
-            x, y = cls.getPos()
-            f.write('%s:%s,%s\n' % (cls.getName(), x, y))
-
-        f.write('@关系:首-末\n')
-        for line in self.lnItems:
-            f.write('%s:%s-%s\n' % (line.type().value, line.src.getName(), line.dst.getName()))
-        f.flush()
-        f.close()
-        self.save_attr()
-
-    def save_attr(self):
-        f = open('classattr.txt', 'w')
-        f.write('@类名,属性名,类型,大小\n')
-        for cls in self.clsItems:
-            for attr in cls.get_attrs():
-                f.write('%s,%s,%s,%s\n' % (cls.getName(), attr[0], attr[1], attr[2]))
-        f.flush()
-        f.close()
+        Document.save()
+        Document.save_attrs()
 
     def open_attr(self, clsname_item):
         f = open('classattr.txt', 'r')
@@ -205,35 +149,8 @@ class MainWin(object):
         f.close()
 
     def on_open(self):
-        f = open('classcharm.txt', 'r')
-        content = f.readlines()
-        contentType = 0
-        clsname_item = {}
-        for i in content:
-            i=i.strip('\n')
-            if i.startswith('@类名'):
-                contentType=1
-            elif i.startswith('@关系'):
-                contentType=2
-            elif contentType==1:
-                strs=i.split(':')
-                clsName=strs[0]
-                strPos=strs[1].split(',')
-                x=float(strPos[0])
-                y=float(strPos[1])
-                clsname_item[clsName]=self.createClsItem(clsName,(x,y))
-            elif contentType==2:
-                strs=i.split(':')
-                lt=LineType(int(strs[0]))
-                strCls=strs[1].split('-')
-                srcCls=clsname_item[strCls[0]]
-                dstCls=clsname_item[strCls[1]]
-                startPos=srcCls.getAnchor()
-                endPos=dstCls.getAnchor()
-                lnItem =self.__createLineItem(LineType(lt), startPos[0], startPos[1],endPos[0],endPos[1])
-                self.createLink(srcCls, dstCls, lnItem)
-        f.close()
-        self.open_attr(clsname_item)
+        Document.open()
+        Document.open_attrs()
 
 if __name__ == '__main__':
     CurrState.init()

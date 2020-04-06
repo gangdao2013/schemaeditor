@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 
+from Document import *
 from CurrState import *
 import AttrEditor
 
@@ -14,12 +15,18 @@ class ClsItem(object):
         self.__outLns = []  # 以本图元为起始的连接线
         self.__inLins = []  # 以本图元为终止的连接线
         self.__canvas=Canvas
-        self.__txt = self.__canvas.create_text(position,text=clsName,fill='green',width=80,activefill='red')
+        self.__txt = self.__canvas.create_text(position,text=clsName,fill='green', activefill='red')
         (x1,y1,x2,y2)=self.__canvas.bbox(self.__txt)
-        self.__rect=self.__canvas.create_rectangle(x1-2,y1-2,x2+2,y2+2,fill='white',activefill='red')
+        self.__rect=self.__canvas.create_rectangle(x1-2,y1-2,x2+2,y2+2,fill='white', activefill='red')
         self.__canvas.lift(self.__txt)
         Canvas.tag_bind(self.__txt, "<B1-Motion>",self.onMove)
-        Canvas.tag_bind(self.__txt, "<Double-Button-1>",self.on_edit_attr)
+        Canvas.tag_bind(self.__txt, "<Button-3>",
+                        func=lambda event : self.menubar.post(event.x_root, event.y_root))
+
+        self.menubar = Menu(Canvas, tearoff=True)
+        self.menubar.add_command(label='编辑属性', command=self.on_edit_attr)
+        self.menubar.add_separator()
+        self.menubar.add_command(label='删除', command=self.on_del)
 
     def isMine(self,itemId):
         return itemId==self.__txt or itemId==self.__rect
@@ -43,11 +50,19 @@ class ClsItem(object):
     def getName(self):
         return self.__canvas.itemcget(self.__txt, 'text')
 
-    def addOutLns(self, LineItem):
-        self.__outLns.append(LineItem)
+    def addOutLns(self, line):
+        self.__outLns.append(line)
 
-    def addInLns(self, LineItem):
-        self.__inLins.append(LineItem)
+    def del_outln(self, line):
+        if line in self.__outLns:
+            self.__outLns.remove(line)
+
+    def addInLns(self, line):
+        self.__inLins.append(line)
+
+    def del_inln(self, line):
+        if line in self.__inLins:
+            self.__inLins.remove(line)
 
     def onMove(self, event):
         if CurrState.mode == EditMode.select:
@@ -61,9 +76,18 @@ class ClsItem(object):
             for line in self.__outLns:
                 line.on_srcordst_moved()
 
-    def on_edit_attr(self, event):
+    def on_edit_attr(self):
         dlg = AttrEditor.AttrEditor(self.__canvas, self.attrs, self.get_attrs_r(False))
         dlg.grab_set()
+
+    def on_del(self):
+        for line in self.__outLns[:]:
+            line.delMe()
+        for line in self.__inLins[:]:
+            line.delMe()
+        Document.remove_cls(self)
+        self.__canvas.delete(self.__txt)
+        self.__canvas.delete(self.__rect)
 
     def get_attrs(self): # 获取属性，仅自身属性
         return self.attrs

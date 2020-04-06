@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from tkinter import *
 import math
+import Document
 
 class LineType(enum.Enum):
     invalid=0
@@ -11,18 +12,34 @@ class BaseLineItem(object):
     def __init__(self, canvas, line_id):
         self.__canvas = canvas
         self.__lineId = line_id
+        self.src = None
+        self.dst = None
 
-    def setSrc(self, ClsItem):
-        self.src = ClsItem
+        canvas.tag_bind(self.__lineId, "<Button-3>",
+                        func=lambda event : self.menubar.post(event.x_root, event.y_root))
+        self.menubar = Menu(canvas, tearoff=True)
+        self.menubar.add_command(label='删除', command=self.on_del)
 
-    def setDst(self, ClsItem):
-        self.dst = ClsItem
+    def setSrc(self, clsItem):
+        self.src = clsItem
+        return self.src
+
+    def setDst(self, clsItem):
+        self.dst = clsItem
 
     @abstractmethod
     def type(self):
         pass
 
+    def on_del(self):
+        self.delMe()
+
     def delMe(self):
+        if self.src:
+            self.src.del_outln(self)
+        if self.dst:
+            self.dst.del_inln(self)
+        Document.Document.remove_line(self)
         self.__canvas.delete(self.__lineId)
 
     def getItemId(self):
@@ -62,8 +79,7 @@ class BaseLineItem(object):
 #派生连接线
 class DeriveLineItem(BaseLineItem):
     def __init__(self, canvas,x1,y1,x2,y2):
-        #line = canvas.create_line(x1,y1,x2,y2,fill='blue',arrow=LAST)
-        line = canvas.create_line(x1,y1,x2,y2,fill='blue', arrow=LAST,
+        line = canvas.create_line(x1,y1,x2,y2,fill='blue', arrow=LAST, activefill='red',
                                   arrowshape=(15, 15, 8), width=3)
         BaseLineItem.__init__(self, canvas, line)
 
