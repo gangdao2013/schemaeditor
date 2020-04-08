@@ -16,6 +16,13 @@ class Document(object):
         return None
 
     @classmethod
+    def get_cls_byname(cls, name):
+        for clsItem in cls.clsItems:
+            if clsItem.getName() == name:
+                return clsItem
+        return None
+
+    @classmethod
     def remove_line(cls, lnitem):
         if lnitem in Document.lnItems:
             cls.lnItems.remove(lnitem)

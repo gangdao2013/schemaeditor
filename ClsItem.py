@@ -47,6 +47,10 @@ class ClsItem(object):
         x1, y1 = self.__canvas.coords(self.__txt)
         return x1, y1
 
+    def get_size(self):
+        (x1, y1, x2, y2) = self.__canvas.bbox(self.__rect)
+        return (x2-x1, y2-y1)
+
     def getName(self):
         return self.__canvas.itemcget(self.__txt, 'text')
 

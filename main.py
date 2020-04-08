@@ -9,6 +9,7 @@ from ClsItem import *
 from LineItem import *
 from CurrState import *
 from Document import *
+from ImportSchema import *
 
 class MainWin(object):
     def __init__(self):
@@ -21,6 +22,8 @@ class MainWin(object):
         openbn.pack(side=TOP, ipadx=10, ipady=5, pady=3)
         savebn = Button(frame, text='保存', command=self.on_save)
         savebn.pack(side=TOP, ipadx=10, ipady=5, pady=33)
+        impbn = Button(frame, text='导入', command=self.on_import)
+        impbn.pack(side=TOP, ipadx=10, ipady=5, pady=33)
 
         self.selbn = Button(frame, text='选择', command=self.onSelect)
         self.selbn.pack(side=TOP, ipadx=10, ipady=5, pady=3)
@@ -134,23 +137,11 @@ class MainWin(object):
         Document.save()
         Document.save_attrs()
 
-    def open_attr(self, clsname_item):
-        f = open('classattr.txt', 'r')
-        content = f.readlines()
-        i = 0
-        for line in content:
-            if i > 0: # 实际内容
-                line = line.strip('\n')
-                strs = line.split(',')
-                cls=strs[0]
-                attr=[strs[1], strs[2], strs[3]]
-                clsname_item[cls].add_attr(attr)
-            i += 1
-        f.close()
-
     def on_open(self):
         Document.open()
         Document.open_attrs()
+    def on_import(self):
+        ImportSchema().do()
 
 if __name__ == '__main__':
     CurrState.init()
