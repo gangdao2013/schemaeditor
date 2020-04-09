@@ -11,6 +11,7 @@ from LineItem import LineType
 
 class ClsItem(object):
     def __init__(self, Canvas, clsName, position):
+        self.x, self.y = 0, 0 #鼠标按下位置
         self.attrs = []
         self.__outLns = []  # 以本图元为起始的连接线
         self.__inLins = []  # 以本图元为终止的连接线
@@ -19,6 +20,7 @@ class ClsItem(object):
         (x1,y1,x2,y2)=self.__canvas.bbox(self.__txt)
         self.__rect=self.__canvas.create_rectangle(x1-2,y1-2,x2+2,y2+2,fill='white', activefill='red')
         self.__canvas.lift(self.__txt)
+        Canvas.tag_bind(self.__txt, "<ButtonPress-1>",self.on_press)
         Canvas.tag_bind(self.__txt, "<B1-Motion>",self.onMove)
         Canvas.tag_bind(self.__txt, "<Button-3>",
                         func=lambda event : self.menubar.post(event.x_root, event.y_root))
@@ -68,17 +70,23 @@ class ClsItem(object):
         if line in self.__inLins:
             self.__inLins.remove(line)
 
+    def on_press(self, event):
+        if CurrState.mode == EditMode.select:
+            self.x = event.x
+            self.y = event.y
+
     def onMove(self, event):
         if CurrState.mode == EditMode.select:
-            (x1, y1, x2, y2) = self.__canvas.bbox(self.__txt)
-            self.__canvas.move(self.__rect, event.x-x1, event.y-y1)
-            self.__canvas.move(self.__txt, event.x-x1, event.y-y1)
+            self.__canvas.move(self.__rect, event.x-self.x, event.y-self.y)
+            self.__canvas.move(self.__txt, event.x-self.x, event.y-self.y)
             # 连接线跟随
             nowAnchor = self.getAnchor()
             for line in self.__inLins:
                 line.on_srcordst_moved()
             for line in self.__outLns:
                 line.on_srcordst_moved()
+            self.x = event.x
+            self.y = event.y
 
     def on_edit_attr(self):
         dlg = AttrEditor.AttrEditor(self.__canvas, self.attrs, self.get_attrs_r(False))

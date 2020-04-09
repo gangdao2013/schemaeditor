@@ -24,12 +24,12 @@ class ImportSchema:
     def handleMetaTable(self, data):
         data.pop(0)  # 忽略表头
         data.sort(key=itemgetter(0))
-        x, y = 0, 0
+        x, y = 120, 100
         hInterval = 20
         vInterval = 0
         for row in data:
-            if x > 980:
-                x = 0
+            if x > 800:
+                x = 120
                 y = y + vInterval + 30
                 vInterval = 0
             clsitem = Document.create_clsitem(row[0], (x, y))
@@ -60,7 +60,7 @@ class ImportSchema:
                 for col in range(len(field)):
                     fldDescAttr = title[col]
                     if fldDescAttr == '列英文名称(COLUMN_NAME_ENG)':
-                        attr.append(field[col])
+                        attr[0] = field[col]
                     elif fldDescAttr == '数据类型(DATATYPE)':
                         if field[col] in dataType.keys():
                             dt = dataType[field[col]]

@@ -36,9 +36,18 @@ class MainWin(object):
 
         frame.pack(side=LEFT, expand=FALSE)
 
-        self.cv = Canvas(self.root, width=1000, height=500, background='white')
+        frame2 = Frame(self.root)
+        self.cv = Canvas(frame2, width=1700, height=800, background='white',scrollregion=(0,0,1800,1500))
         Document.canvas = self.cv
-        self.cv.pack(side=RIGHT, fill=BOTH, expand=TRUE)
+
+        hbar = Scrollbar(frame2, orient=HORIZONTAL, command=self.cv.xview)
+        hbar.pack(side=BOTTOM, fill=X)
+        vbar = Scrollbar(frame2, orient=VERTICAL, command=self.cv.yview)
+        vbar.pack(side=RIGHT, fill=Y)
+        self.cv.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
+        self.cv.pack(side=LEFT, fill=BOTH, expand=TRUE)
+
+        frame2.pack(side=LEFT)
 
         self.menubar = Menu(self.root, tearoff=True)
         self.currPos=10,10
