@@ -10,12 +10,14 @@ class LineType(enum.Enum):
 
 class BaseLineItem(object):
     def __init__(self, canvas, line_id):
-        self.__canvas = canvas
-        self.__lineId = line_id
+        self._canvas = canvas
+        self._lineId = line_id
         self.src = None
         self.dst = None
 
-        canvas.tag_bind(self.__lineId, "<Button-3>",
+        canvas.tag_bind(self._lineId, "<Enter>", self.on_enter)
+        canvas.tag_bind(self._lineId, "<Leave>", self.on_leave)
+        canvas.tag_bind(self._lineId, "<Button-3>",
                         func=lambda event : self.menubar.post(event.x_root, event.y_root))
         self.menubar = Menu(canvas, tearoff=True)
         self.menubar.add_command(label='删除', command=self.on_del)
@@ -40,10 +42,10 @@ class BaseLineItem(object):
         if self.dst:
             self.dst.del_inln(self)
         Document.Document.remove_line(self)
-        self.__canvas.delete(self.__lineId)
+        self._canvas.delete(self._lineId)
 
     def getItemId(self):
-        return self.__lineId
+        return self._lineId
 
     # 响应连接关系建立后，源或终的位置变化
     def on_srcordst_moved(self):
@@ -60,7 +62,7 @@ class BaseLineItem(object):
                 elif dist < mindistance:
                     mindistance = dist
                     pos = (sp[0], sp[1], dp[0], dp[1])
-        self.__canvas.coords(self.__lineId, pos[0], pos[1], pos[2], pos[3])
+        self._canvas.coords(self._lineId, pos[0], pos[1], pos[2], pos[3])
 
     def on_end_moved(self, src_cls, endx, endy): # 响应连接关系还未建立时的终点变化
         src_pos = src_cls.get_anchors()
@@ -74,24 +76,48 @@ class BaseLineItem(object):
             elif dist < mindistance:
                 mindistance = dist
                 pos = (sp[0], sp[1])
-        self.__canvas.coords(self.__lineId, pos[0], pos[1], endx, endy)
+        self._canvas.coords(self._lineId, pos[0], pos[1], endx, endy)
+
+    def on_enter(self, event=None):
+        self._canvas.itemconfig(self._lineId, fill='red')
+        if self.src:
+            self.src.active('red')
+        if self.dst:
+            self.dst.active('red')
+
+    def on_leave(self, event=None):
+        self._canvas.itemconfig(self._lineId, fill=self.color())
+        if self.src:
+            self.src.deactive()
+        if self.dst:
+            self.dst.deactive()
+
+    @abstractmethod
+    def color(self):
+        pass
 
 #派生连接线
 class DeriveLineItem(BaseLineItem):
     def __init__(self, canvas,x1,y1,x2,y2):
-        line = canvas.create_line(x1,y1,x2,y2,fill='blue', arrow=LAST, activefill='red',
-                                  arrowshape=(15, 15, 8), width=3)
+        line = canvas.create_line(x1,y1,x2,y2,fill=self.color(), arrow=LAST,
+                                  arrowshape=(15, 15, 8), width=2)
         BaseLineItem.__init__(self, canvas, line)
 
     def type(self):
         return LineType.derive
 
+    def color(self):
+        return 'blue'
+
 #连接关系线
 class AssLineItem(BaseLineItem):
     def __init__(self, canvas,x1,y1,x2,y2):
-        line = canvas.create_line(x1,y1,x2,y2,fill='green', arrow=LAST,
-                                  arrowshape=(8, 20, 8), width=3)
+        line = canvas.create_line(x1,y1,x2,y2,fill=self.color(), arrow=LAST,
+                                  arrowshape=(8, 20, 8), width=2)
         BaseLineItem.__init__(self, canvas, line)
 
     def type(self):
         return LineType.ass
+
+    def color(self):
+        return 'green'

@@ -20,6 +20,9 @@ class ClsItem(object):
         (x1,y1,x2,y2)=self.__canvas.bbox(self.__txt)
         self.__rect=self.__canvas.create_rectangle(x1-2,y1-2,x2+2,y2+2,fill='white', activefill='red')
         self.__canvas.lift(self.__txt)
+
+        Canvas.tag_bind(self.__txt, "<Enter>", self.on_enter)
+        Canvas.tag_bind(self.__txt, "<Leave>", self.on_leave)
         Canvas.tag_bind(self.__txt, "<ButtonPress-1>",self.on_press)
         Canvas.tag_bind(self.__txt, "<B1-Motion>",self.onMove)
         Canvas.tag_bind(self.__txt, "<Button-3>",
@@ -69,6 +72,22 @@ class ClsItem(object):
     def del_inln(self, line):
         if line in self.__inLins:
             self.__inLins.remove(line)
+
+    def on_enter(self, event):
+        for line in self.__outLns:
+            line.on_enter()
+        for line in self.__inLins:
+            line.on_enter()
+    def on_leave(self, event):
+        for line in self.__outLns:
+            line.on_leave()
+        for line in self.__inLins:
+            line.on_leave()
+
+    def active(self, color):
+        self.__canvas.itemconfig(self.__txt, fill=color)
+    def deactive(self):
+        self.__canvas.itemconfig(self.__txt, fill='green')
 
     def on_press(self, event):
         if CurrState.mode == EditMode.select:
