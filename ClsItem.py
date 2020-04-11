@@ -1,5 +1,6 @@
+import copy
 from tkinter import *
-from tkinter import ttk
+from tkinter import messagebox
 
 from Document import *
 from CurrState import *
@@ -30,6 +31,9 @@ class ClsItem(object):
 
         self.menubar = Menu(Canvas, tearoff=True)
         self.menubar.add_command(label='编辑属性', command=self.on_edit_attr)
+        self.menubar.add_command(label='查找潜在的子类', command=self.on_find_maybechild)
+        self.menubar.add_separator()
+        self.menubar.add_command(label='复制', command=self.on_clone)
         self.menubar.add_separator()
         self.menubar.add_command(label='删除', command=self.on_del)
 
@@ -59,6 +63,11 @@ class ClsItem(object):
     def getName(self):
         return self.__canvas.itemcget(self.__txt, 'text')
 
+    def setname(self, newname):
+        self.__canvas.itemconfig(self.__txt, text=newname)
+        (x1,y1,x2,y2)=self.__canvas.bbox(self.__txt)
+        self.__canvas.coords(self.__rect, x1-2,y1-2,x2+2,y2+2)
+
     def addOutLns(self, line):
         self.__outLns.append(line)
 
@@ -84,6 +93,47 @@ class ClsItem(object):
         for line in self.__inLins:
             line.on_leave()
 
+    def on_find_maybechild(self):
+        maybecls = Document.find_maybechild(self)
+        if len(maybecls) > 0:
+            answer = False
+            if len(self.attrs) == 0:
+                answer = messagebox.askyesno('提示', '父类无自身属性，其它类都被判作其子类！\n仍要创建派生关系吗？')
+            else:
+                answer = messagebox.askyesno('提示', '要创建派生关系吗？')
+            if answer:
+                for cls in maybecls:
+                    cls.remove_dupattr(self.attrs)
+                    lnItem = Document.createLineItem(LineType.derive)
+                    Document.createLink(cls, self, lnItem)
+
+    # 判断本类是否可能是clsitem的子类
+    def maybe_childof(self, parentitem):
+        if self is parentitem or len(self.attrs) < len(parentitem.attrs):
+            return False
+        else:
+            bMaybe = True
+            attrs2 = self.attrs[:]
+            for attr in parentitem.attrs:
+                bFound = False
+                for ar in attrs2:
+                    if attr == ar:
+                        bFound = True
+                        attrs2.remove(ar)
+                        break
+                if not bFound:
+                    bMaybe = False
+                    break
+            return bMaybe
+
+    #删除和父类重复的属性
+    def remove_dupattr(self, attrs):
+        for attr in attrs:
+            for ar in self.attrs:
+                if attr == ar:
+                    self.attrs.remove(ar)
+                    break
+
     def active(self, color):
         self.__canvas.itemconfig(self.__txt, fill=color)
     def deactive(self):
@@ -108,8 +158,22 @@ class ClsItem(object):
             self.y = event.y
 
     def on_edit_attr(self):
-        dlg = AttrEditor.AttrEditor(self.__canvas, self.attrs, self.get_attrs_r(False))
+        dlg = AttrEditor.AttrEditor(self.__canvas, self)
         dlg.grab_set()
+
+    def on_clone(self):
+        #不要重名
+        srcname = self.getName() + '-1'
+        clsitem = Document.get_cls_byname(srcname)
+        i=2
+        while clsitem is not None:
+            srcname = self.getName() + '-%s' % (i)
+            i += 1
+            clsitem = Document.get_cls_byname(srcname)
+        pos = self.getPos()
+        pos = pos[0]+30, pos[1]+30
+        newitem = Document.create_clsitem(srcname, pos)
+        newitem.attrs = copy.copy(self.attrs)
 
     def on_del(self):
         for line in self.__outLns[:]:

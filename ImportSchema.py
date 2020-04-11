@@ -71,6 +71,6 @@ class ImportSchema:
                     elif fldDescAttr == '引用表名(R_TABLE_NAME)':
                         refclsitem = Document.get_cls_byname(field[col])
                         if refclsitem is not None:
-                                lnItem = Document.createLineItem(LineType.ass, 0, 0, 0, 0)
+                                lnItem = Document.createLineItem(LineType.ass)
                                 Document.createLink(clsitem, refclsitem, lnItem)
                 clsitem.add_attr(attr)

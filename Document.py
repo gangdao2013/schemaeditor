@@ -43,7 +43,7 @@ class Document(object):
         return item
 
     @classmethod
-    def createLineItem(cls, line_type, x1, y1, x2, y2):
+    def createLineItem(cls, line_type, x1=0, y1=0, x2=0, y2=0):
         if line_type == LineType.derive:
             return DeriveLineItem(cls.canvas, x1, y1, x2, y2)
         elif line_type == LineType.ass:
@@ -60,6 +60,15 @@ class Document(object):
         # 重置连接线端点
         linkLine.on_srcordst_moved()
         cls.lnItems.append(linkLine)
+
+    @classmethod
+    # 查找潜在的子类，即包含有startCls所有属性的其它类
+    def find_maybechild(cls, startCls):
+        maybecls = []
+        for clsitem in cls.clsItems:
+            if clsitem.maybe_childof(startCls):
+                maybecls.append(clsitem)
+        return maybecls
 
     @classmethod
     def save(cls):
@@ -100,9 +109,7 @@ class Document(object):
                 strCls=strs[1].split('-')
                 srcCls=clsname_item[strCls[0]]
                 dstCls=clsname_item[strCls[1]]
-                startPos=srcCls.getAnchor()
-                endPos=dstCls.getAnchor()
-                lnItem =cls.createLineItem(LineType(lt), startPos[0], startPos[1],endPos[0],endPos[1])
+                lnItem =cls.createLineItem(LineType(lt))
                 cls.createLink(srcCls, dstCls, lnItem)
         f.close()
 
