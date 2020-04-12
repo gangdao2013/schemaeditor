@@ -9,6 +9,8 @@ class AttrEditor(Toplevel):
 
         self.clsitem = clsitem
         self.item = None #当前选中的属性行
+        self.datatypes = ['short', 'int', 'long long', 'float', 'string']
+        self.datasize = [2, 4, 8, 4, 9999]
 
         self.title("编辑属性")
         self.geometry('800x500')
@@ -47,7 +49,7 @@ class AttrEditor(Toplevel):
         Entry(frame2, textvariable=self.xls_text).pack(side=LEFT, ipadx=5)
 
         Label(frame2, text="类型：").pack(side=LEFT, ipadx=5)
-        self.comb_type = ttk.Combobox(frame2, values=['bool', 'short', 'int', 'long long', 'float', 'string'])
+        self.comb_type = ttk.Combobox(frame2, values=self.datatypes)
         self.comb_type.pack(side=LEFT, ipadx=5)
         self.comb_type.current(0)
         self.comb_type.bind('<<ComboboxSelected>>', self.on_type_selected)
@@ -138,6 +140,7 @@ class AttrEditor(Toplevel):
             self.comb_size.config(values=size, state='normal')
             self.comb_size.current(0)
         else:
-            self.comb_size.config(values=[''], state='disabled')
+            val = '%s' % (self.datasize[self.comb_type.current()])
+            self.comb_size.config(values=[val], state='disabled')
             self.comb_size.current(0)
 

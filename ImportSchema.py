@@ -25,12 +25,12 @@ class ImportSchema:
         data.pop(0)  # 忽略表头
         data.sort(key=itemgetter(0))
         x, y = 120, 100
-        hInterval = 20
+        hInterval = 50
         vInterval = 0
         for row in data:
-            if x > 800:
+            if x > 1200:
                 x = 120
-                y = y + vInterval + 30
+                y = y + vInterval + 50
                 vInterval = 0
             clsitem = Document.create_clsitem(row[0], (x, y))
             w,h = clsitem.get_size()

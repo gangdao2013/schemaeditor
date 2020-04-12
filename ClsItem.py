@@ -19,21 +19,21 @@ class ClsItem(object):
         self.__canvas=Canvas
         self.__txt = self.__canvas.create_text(position,text=clsName,fill='green', activefill='red')
         (x1,y1,x2,y2)=self.__canvas.bbox(self.__txt)
-        self.__rect=self.__canvas.create_rectangle(x1-2,y1-2,x2+2,y2+2,fill='white', activefill='red')
+        self.__rect=self.__canvas.create_rectangle(x1-2,y1-2,x2+2,y2+2,fill='white', outline='black')
         self.__canvas.lift(self.__txt)
 
         Canvas.tag_bind(self.__txt, "<Enter>", self.on_enter)
         Canvas.tag_bind(self.__txt, "<Leave>", self.on_leave)
         Canvas.tag_bind(self.__txt, "<ButtonPress-1>",self.on_press)
         Canvas.tag_bind(self.__txt, "<B1-Motion>",self.onMove)
-        Canvas.tag_bind(self.__txt, "<Button-3>",
-                        func=lambda event : self.menubar.post(event.x_root, event.y_root))
+        #Canvas.tag_bind(self.__txt, "<Button-3>",
+        #                func=lambda event : self.menubar.post(event.x_root, event.y_root))
 
         self.menubar = Menu(Canvas, tearoff=True)
         self.menubar.add_command(label='编辑属性', command=self.on_edit_attr)
         self.menubar.add_command(label='查找潜在的子类', command=self.on_find_maybechild)
         self.menubar.add_separator()
-        self.menubar.add_command(label='复制', command=self.on_clone)
+        self.menubar.add_command(label='克隆', command=self.on_clone)
         self.menubar.add_separator()
         self.menubar.add_command(label='删除', command=self.on_del)
 
@@ -87,6 +87,7 @@ class ClsItem(object):
             line.on_enter()
         for line in self.__inLins:
             line.on_enter()
+
     def on_leave(self, event):
         for line in self.__outLns:
             line.on_leave()
@@ -96,6 +97,8 @@ class ClsItem(object):
     def on_find_maybechild(self):
         maybecls = Document.find_maybechild(self)
         if len(maybecls) > 0:
+            for cls in maybecls:
+                cls.setselected('blue')
             answer = False
             if len(self.attrs) == 0:
                 answer = messagebox.askyesno('提示', '父类无自身属性，其它类都被判作其子类！\n仍要创建派生关系吗？')
@@ -106,6 +109,8 @@ class ClsItem(object):
                     cls.remove_dupattr(self.attrs)
                     lnItem = Document.createLineItem(LineType.derive)
                     Document.createLink(cls, self, lnItem)
+            for cls in maybecls:
+                cls.deselected()
 
     # 判断本类是否可能是clsitem的子类
     def maybe_childof(self, parentitem):
@@ -138,6 +143,12 @@ class ClsItem(object):
         self.__canvas.itemconfig(self.__txt, fill=color)
     def deactive(self):
         self.__canvas.itemconfig(self.__txt, fill='green')
+
+    def setselected(self, color):
+        self.__canvas.itemconfig(self.__rect, outline=color)
+
+    def deselected(self):
+        self.__canvas.itemconfig(self.__rect, outline='black')
 
     def on_press(self, event):
         if CurrState.mode == EditMode.select:

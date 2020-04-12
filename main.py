@@ -1,14 +1,10 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 # -*- coding: cp936 -*-
- 
-import tkinter
 
-from tkinter import *
 from ClsItem import *
 from LineItem import *
 from CurrState import *
-from Document import *
 from ImportSchema import *
 
 class MainWin(object):
@@ -16,6 +12,7 @@ class MainWin(object):
         self.root = Tk()
         self.currLn=None
         self.startCls=None
+        self.multi_items=[]
 
         frame = Frame(self.root)
         openbn = Button(frame, text='打开', command=self.on_open)
@@ -49,35 +46,32 @@ class MainWin(object):
 
         frame2.pack(side=LEFT)
 
-        self.menubar = Menu(self.root, tearoff=True)
+        self.onSelect() #默认为选择操作
+
+        self.cv.bind("<ButtonPress-1>", self.onLBtnPress)
+        self.cv.bind("<B1-Motion>", self.onLBtnMove)
+        self.cv.bind("<ButtonRelease-1>", self.onLBtnRelease)
+        self.cv.bind("<Button-3>", self.onContextMenu)
+        self.cv.bind("<Control-ButtonPress-1>", self.on_multiselect)
+
         self.currPos=10,10
-        self.menubar.add_command(label='新增', command=self.createClass)
-        # 画布与鼠标左键进行绑定
-        self.cv.bind_all("<Button-3>", self.onContextMenu)
-        self.cv.bind_all("<ButtonPress-1>", self.onLBtnPress)
-        self.cv.bind_all("<B1-Motion>", self.onLBtnMove)
-        self.cv.bind_all("<ButtonRelease-1>", self.onLBtnRelease)
 
     def show(self):
         self.root.mainloop()
 
     def createClass(self):
-        dlg = Toplevel(master=self.cv)
+        dlg = Toplevel(self.cv)
         dlg.title("输入类名")
         dlg.geometry('300x100')
-
-        l1 = Label(dlg, text="类名：")
-        l1.pack()
-        xls_text = StringVar()
-        xls = Entry(dlg, textvariable = xls_text)
-        xls_text.set(" ")
-        xls.pack()
+        Label(dlg, text="类名：").pack(side=LEFT)
+        editor = StringVar()
+        Entry(dlg, textvariable = editor).pack(side=LEFT)
 
         def on_click():
-            Document.create_clsitem(xls_text.get(), self.currPos)
+            Document.create_clsitem(editor.get(), self.currPos)
             dlg.destroy()
 
-        Button(dlg, text="创建", command=on_click).pack()
+        Button(dlg, text="创建", command=on_click).pack(side=LEFT)
         dlg.grab_set()
 
     def onDerive(self):
@@ -97,17 +91,75 @@ class MainWin(object):
         self.selbn['bg'] = 'gray'
         self.derivebn['bg'] = 'white'
         self.assbn['bg'] = 'white'
+        self.cv.unbind("<ButtonPress-1>")
 
     def onContextMenu(self, event):
-        ids=self.cv.find_overlapping(event.x-1,event.y-1,event.x+1, event.y+1)
-        if len(ids)==0:
-            self.currPos=event.x, event.y
-            self.menubar.post(event.x_root, event.y_root)
+        if len(self.multi_items) > 0: #已选择多个类，可抽象出父类
+            menubar = Menu(self.root, tearoff=True)
+            menubar.add_command(label='抽象父类', command=self.on_abstract)
+            menubar.post(event.x_root, event.y_root)
+        else:
+            ids = self.cv.find_overlapping(event.x - 1, event.y - 1, event.x + 1, event.y + 1)
+            if len(ids) == 0:  # 空白处创建新类
+                self.currPos = event.x, event.y
+                menubar = Menu(self.root, tearoff=True)
+                menubar.add_command(label='新增', command=self.createClass)
+                menubar.post(event.x_root, event.y_root)
+            else:
+                clsitem = Document.get_cls_fromids(ids)
+                if clsitem:
+                    clsitem.menubar.post(event.x_root, event.y_root)
+
+    def on_multiselect(self, event):
+        if CurrState.mode == EditMode.select:
+            ids=self.cv.find_overlapping(event.x-1,event.y-1,event.x+1, event.y+1)
+            clsitem = Document.get_cls_fromids(ids)
+            if clsitem is not None:
+                clsitem.setselected('blue')
+                self.multi_items.append(clsitem)
+
+    def on_abstract(self):
+        tp = Toplevel(self.cv)
+        Label(tp, text='父类名：').pack(side=LEFT)
+        sv = StringVar(tp)
+        Entry(tp, textvariable=sv).pack(side=LEFT)
+
+        def on_ok():
+            itemcount = len(self.multi_items)
+            frontitem = self.multi_items[0]
+            pos = frontitem.getPos()
+            parentitem = Document.create_clsitem(sv.get(), (pos[0] + 150, pos[1]-50))
+            if itemcount > 1: #至少有2个才需要找出共有属性
+                for attr in frontitem.attrs:
+                    count = 1
+                    for clsitem in self.multi_items[1:]:
+                        for tmp in clsitem.attrs:
+                            if attr == tmp:
+                                count += 1
+                                break
+                    if count == itemcount:
+                        parentitem.attrs.append(attr)
+
+            for clsitem in self.multi_items:
+                lineitem = Document.createLineItem(LineType.derive)
+                Document.createLink(clsitem, parentitem, lineitem)
+                clsitem.remove_dupattr(parentitem.attrs)
+                clsitem.deselected()
+            self.multi_items.clear()
+            tp.destroy()
+
+        btn = Button(tp, text='确定', command=on_ok)
+        btn.pack(side=LEFT)
+        tp.grab_set()
 
     def onLBtnPress(self, event):
         if CurrState.mode != EditMode.select:
             ids=self.cv.find_overlapping(event.x-1,event.y-1,event.x+1, event.y+1)
             self.startCls = Document.get_cls_fromids(ids)
+        else:
+            for clsitem in self.multi_items:
+                clsitem.deselected()
+            self.multi_items.clear()
 
     def createLineItem(self, x1, y1, x2, y2):
         line_type=LineType.invalid
