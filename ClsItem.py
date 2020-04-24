@@ -105,10 +105,40 @@ class ClsItem(object):
             else:
                 answer = messagebox.askyesno('提示', '要创建派生关系吗？')
             if answer:
+                parent = maybecls[0].get_parentcls()
+                dstcls = maybecls[0].get_assdestcls()
+                srccls = maybecls[0].get_asssrccls()
+                if len(maybecls) > 1:
+                    for cls in maybecls[1:]:
+                        parent1 = cls.get_parentcls().values()
+                        dstcls1 = cls.get_assdestcls().values()
+                        srccls1 = cls.get_asssrccls().values()
+                        for line in list(parent):
+                            if parent[line] not in parent1:
+                                parent.pop(line)
+                        for line in list(dstcls):
+                            if dstcls[line] not in dstcls1:
+                                dstcls.pop(line)
+                        for line in list(srccls):
+                            if srccls[line] not in srccls1:
+                                srccls.pop(line)
                 for cls in maybecls:
                     cls.remove_dupattr(self.attrs)
                     lnItem = Document.createLineItem(LineType.derive)
                     Document.createLink(cls, self, lnItem)
+                    for line in parent.keys():
+                        lnItem = Document.createLineItem(LineType.derive)
+                        Document.createLink(self, parent[line], lnItem)
+                        line.delMe()
+                    for line in dstcls.keys():
+                        lnItem = Document.createLineItem(LineType.ass)
+                        Document.createLink(self, dstcls[line], lnItem)
+                        line.delMe()
+                    for line in srccls.keys():
+                        lnItem = Document.createLineItem(LineType.ass)
+                        Document.createLink(dstcls[line], self, lnItem)
+                        line.delMe()
+
             for cls in maybecls:
                 cls.deselected()
 
@@ -210,3 +240,27 @@ class ClsItem(object):
 
     def add_attr(self, attr):
         self.attrs.append(attr)
+
+    # 取父类
+    def get_parentcls(self):
+        parentcls = {}
+        for line in self.__outLns:
+            if line is DeriveLineItem:
+                parentcls[line] = line.dst
+        return parentcls
+
+    # 取目标关联类
+    def get_assdestcls(self):
+        dstcls = {}
+        for line in self.__outLns:
+            if isinstance(line, AssLineItem):
+                dstcls[line] = line.dst
+        return dstcls
+
+    # 取目标源类
+    def get_asssrccls(self):
+        srccls = {}
+        for line in self.__inLins:
+            if isinstance(line, AssLineItem):
+                srccls[line] = line.src
+        return srccls
