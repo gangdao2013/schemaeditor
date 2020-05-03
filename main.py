@@ -34,7 +34,7 @@ class MainWin(object):
         frame.pack(side=LEFT, expand=FALSE)
 
         frame2 = Frame(self.root)
-        self.cv = Canvas(frame2, width=1700, height=800, background='white',scrollregion=(0,0,1800,1500))
+        self.cv = Canvas(frame2, width=1700, height=1200, background='white',scrollregion=(0,0,1600,1500))
         Document.canvas = self.cv
 
         hbar = Scrollbar(frame2, orient=HORIZONTAL, command=self.cv.xview)
@@ -129,6 +129,9 @@ class MainWin(object):
             frontitem = self.multi_items[0]
             pos = frontitem.getPos()
             parentitem = Document.create_clsitem(sv.get(), (pos[0] + 150, pos[1]-50))
+            parent = frontitem.get_parentcls()
+            dstcls = frontitem.get_assdestcls()
+            srccls = frontitem.get_asssrccls()
             if itemcount > 1: #至少有2个才需要找出共有属性
                 for attr in frontitem.attrs:
                     count = 1
@@ -139,12 +142,53 @@ class MainWin(object):
                                 break
                     if count == itemcount:
                         parentitem.attrs.append(attr)
-
-            for clsitem in self.multi_items:
-                lineitem = Document.createLineItem(LineType.derive)
-                Document.createLink(clsitem, parentitem, lineitem)
-                clsitem.remove_dupattr(parentitem.attrs)
-                clsitem.deselected()
+            
+                for cls in self.multi_items[1:]:
+                    parent1 = cls.get_parentcls().values()
+                    dstcls1 = cls.get_assdestcls().values()
+                    srccls1 = cls.get_asssrccls().values()
+                    for line in list(parent):
+                        if parent[line] not in parent1:
+                            parent.pop(line)
+                    for line in list(dstcls):
+                        if dstcls[line] not in dstcls1:
+                            dstcls.pop(line)
+                    for line in list(srccls):
+                        if srccls[line] not in srccls1:
+                            srccls.pop(line)
+            
+            for ln in parent.keys():
+                lnItem = Document.createLineItem(LineType.derive)
+                Document.createLink(parentitem, parent[line], lnItem)
+            for line in dstcls.keys():
+                lnItem = Document.createLineItem(LineType.ass)
+                Document.createLink(parentitem, dstcls[line], lnItem)
+            for line in srccls.keys():
+                lnItem = Document.createLineItem(LineType.ass)
+                Document.createLink(dstcls[line], parentitem, lnItem)
+                
+            for cls in self.multi_items:
+                cls.remove_dupattr(parentitem.attrs)
+                lnItem = Document.createLineItem(LineType.derive)
+                Document.createLink(cls, parentitem, lnItem)          
+            
+                parent1 = cls.get_parentcls()
+                dstcls1 = cls.get_assdestcls()
+                srccls1 = cls.get_asssrccls()
+                for ln in parent.keys():
+                    for line in parent1.keys():
+                        if parent[ln] == parent1[line]:
+                            line.delMe()
+                for ln in dstcls.keys():
+                    for line in dstcls1.keys():
+                        if dstcls[ln] == dstcls1[line]:
+                            line.delMe()
+                for ln in srccls.keys():
+                    for line in srccls1.keys():
+                        if srccls[ln] == srccls1[line]:
+                            line.delMe()
+                cls.deselected()
+                
             self.multi_items.clear()
             tp.destroy()
 

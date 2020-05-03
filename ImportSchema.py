@@ -28,11 +28,11 @@ class ImportSchema:
         hInterval = 50
         vInterval = 0
         for row in data:
-            if x > 1200:
+            if x > 1400:
                 x = 120
                 y = y + vInterval + 50
                 vInterval = 0
-            clsitem = Document.create_clsitem(row[0], (x, y))
+            clsitem = Document.create_clsitem(row[1], (x, y))
             w,h = clsitem.get_size()
             x = x + w + hInterval
             if vInterval < h:
@@ -41,12 +41,21 @@ class ImportSchema:
     def handleField(self, data):
         title = data.pop(0)  # 表头
         dataType = {'ULongLong': ['long long', '8'],
-                    'VC(255)': ['string', '255'],
                     'Float': ['float', '4'],
                     'float': ['float', '4'],
+                    'VC(15)': ['string', '15'],
+                    'VC(31)': ['string', '31'],
+                    'VC(63)': ['string', '63'],
+                    'VC(127)': ['string', '127'],
+                    'VC(255)': ['string', '255'],
                     'VC(511)': ['string', '511'],
+                    'VC(1023)': ['string', '1023'],
+                    'VC(2047)': ['string', '2047'],
                     'INT': ['int', '4'],
-                    'N(1)': ['string', '1']}
+                    'Short': ['short', '2'],
+                    'N(1)': ['string', '1'],
+                    'D': ['datetime', '8']}
+
         cache = collections.defaultdict(list)
         for one in data:
             cache[one[0]].append(one)
@@ -70,10 +79,10 @@ class ImportSchema:
                         else:
                             print('表%s的字段%s没有匹配的字段类型%s' % (tab, field[1], field[col]))
                     elif fldDescAttr == '引用表名(R_TABLE_NAME)':
-                        bass = True
                         refclsitem = Document.get_cls_byname(field[col])
                         if refclsitem is not None:
+                            bass = True
                             lnItem = Document.createLineItem(LineType.ass)
-                            Document.createLink(clsitem, refclsitem, lnItem)
+                            Document.createLink(clsitem, refclsitem, lnItem)                            
                 if bass is False:
                     clsitem.add_attr(attr)

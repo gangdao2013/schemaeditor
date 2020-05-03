@@ -122,22 +122,36 @@ class ClsItem(object):
                         for line in list(srccls):
                             if srccls[line] not in srccls1:
                                 srccls.pop(line)
+                
+                for line in parent.keys():
+                    lnItem = Document.createLineItem(LineType.derive)
+                    Document.createLink(self, parent[line], lnItem)
+                for line in dstcls.keys():
+                    lnItem = Document.createLineItem(LineType.ass)
+                    Document.createLink(self, dstcls[line], lnItem)
+                for line in srccls.keys():
+                    lnItem = Document.createLineItem(LineType.ass)
+                    Document.createLink(dstcls[line], self, lnItem)
+                        
                 for cls in maybecls:
                     cls.remove_dupattr(self.attrs)
                     lnItem = Document.createLineItem(LineType.derive)
                     Document.createLink(cls, self, lnItem)
-                    for line in parent.keys():
-                        lnItem = Document.createLineItem(LineType.derive)
-                        Document.createLink(self, parent[line], lnItem)
-                        line.delMe()
-                    for line in dstcls.keys():
-                        lnItem = Document.createLineItem(LineType.ass)
-                        Document.createLink(self, dstcls[line], lnItem)
-                        line.delMe()
-                    for line in srccls.keys():
-                        lnItem = Document.createLineItem(LineType.ass)
-                        Document.createLink(dstcls[line], self, lnItem)
-                        line.delMe()
+                    parent1 = cls.get_parentcls()
+                    dstcls1 = cls.get_assdestcls()
+                    srccls1 = cls.get_asssrccls()
+                    for ln in parent.keys():
+                        for line in parent1.keys():
+                            if parent[ln] == parent1[line]:
+                                line.delMe()
+                    for ln in dstcls.keys():
+                        for line in dstcls1.keys():
+                            if dstcls[ln] == dstcls1[line]:
+                                line.delMe()
+                    for ln in srccls.keys():
+                        for line in srccls1.keys():
+                            if srccls[ln] == srccls1[line]:
+                                line.delMe()
 
             for cls in maybecls:
                 cls.deselected()

@@ -9,8 +9,8 @@ class AttrEditor(Toplevel):
 
         self.clsitem = clsitem
         self.item = None #当前选中的属性行
-        self.datatypes = ['short', 'int', 'long long', 'float', 'string']
-        self.datasize = [2, 4, 8, 4, 9999]
+        self.datatypes = ['short', 'int', 'long long', 'float', 'datetime', 'string']
+        self.datasize = [2, 4, 8, 4, 8, 9999]
 
         self.title("编辑属性")
         self.geometry('800x500')
