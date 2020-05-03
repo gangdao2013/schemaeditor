@@ -99,7 +99,9 @@ class MainWin(object):
             menubar.add_command(label='抽象父类', command=self.on_abstract)
             menubar.post(event.x_root, event.y_root)
         else:
-            ids = self.cv.find_overlapping(event.x - 1, event.y - 1, event.x + 1, event.y + 1)
+            x = self.cv.canvasx(event.x)
+            y = self.cv.canvasy(event.y)
+            ids = self.cv.find_overlapping(x-1, y-1, x+1, y+1)
             if len(ids) == 0:  # 空白处创建新类
                 self.currPos = event.x, event.y
                 menubar = Menu(self.root, tearoff=True)
@@ -112,7 +114,9 @@ class MainWin(object):
 
     def on_multiselect(self, event):
         if CurrState.mode == EditMode.select:
-            ids=self.cv.find_overlapping(event.x-1,event.y-1,event.x+1, event.y+1)
+            x = self.cv.canvasx(event.x)
+            y = self.cv.canvasy(event.y)
+            ids = self.cv.find_overlapping(x-1, y-1, x+1, y+1)
             clsitem = Document.get_cls_fromids(ids)
             if clsitem is not None:
                 clsitem.setselected('blue')
@@ -198,7 +202,9 @@ class MainWin(object):
 
     def onLBtnPress(self, event):
         if CurrState.mode != EditMode.select:
-            ids=self.cv.find_overlapping(event.x-1,event.y-1,event.x+1, event.y+1)
+            x = self.cv.canvasx(event.x)
+            y = self.cv.canvasy(event.y)
+            ids = self.cv.find_overlapping(x-1, y-1, x+1, y+1)
             self.startCls = Document.get_cls_fromids(ids)
         else:
             for clsitem in self.multi_items:
@@ -217,7 +223,9 @@ class MainWin(object):
         if CurrState.mode == EditMode.select:
             return
         if self.startCls and self.currLn:
-            ids = list(self.cv.find_overlapping(event.x - 1, event.y - 1, event.x + 1, event.y + 1))
+            x = self.cv.canvasx(event.x)
+            y = self.cv.canvasy(event.y)
+            ids = list(self.cv.find_overlapping(x-1, y-1, x+1, y+1))
             ids.remove(self.currLn.getItemId())
             if len(ids) == 0: #未连接到图元，删除连接线
                 self.currLn.delMe()
