@@ -131,7 +131,7 @@ class ClsItem(object):
                     Document.createLink(self, dstcls[line], lnItem)
                 for line in srccls.keys():
                     lnItem = Document.createLineItem(LineType.ass)
-                    Document.createLink(dstcls[line], self, lnItem)
+                    Document.createLink(srccls[line], self, lnItem)
                         
                 for cls in maybecls:
                     cls.remove_dupattr(self.attrs)
@@ -259,7 +259,7 @@ class ClsItem(object):
     def get_parentcls(self):
         parentcls = {}
         for line in self.__outLns:
-            if line is DeriveLineItem:
+            if isinstance(line, DeriveLineItem):
                 parentcls[line] = line.dst
         return parentcls
 

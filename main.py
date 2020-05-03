@@ -157,7 +157,7 @@ class MainWin(object):
                         if srccls[line] not in srccls1:
                             srccls.pop(line)
             
-            for ln in parent.keys():
+            for line in parent.keys():
                 lnItem = Document.createLineItem(LineType.derive)
                 Document.createLink(parentitem, parent[line], lnItem)
             for line in dstcls.keys():
@@ -165,7 +165,7 @@ class MainWin(object):
                 Document.createLink(parentitem, dstcls[line], lnItem)
             for line in srccls.keys():
                 lnItem = Document.createLineItem(LineType.ass)
-                Document.createLink(dstcls[line], parentitem, lnItem)
+                Document.createLink(srccls[line], parentitem, lnItem)
                 
             for cls in self.multi_items:
                 cls.remove_dupattr(parentitem.attrs)
