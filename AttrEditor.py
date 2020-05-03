@@ -4,25 +4,35 @@ from tkinter import ttk
 
 
 class AttrEditor(Toplevel):
-    def __init__(self, master, attrs, deriveattrs):
+    def __init__(self, master, clsitem):
         Toplevel.__init__(self, master)
 
-        self.attrs = attrs #自身属性
-        self.deriveattrs = deriveattrs #继承属性
+        self.clsitem = clsitem
         self.item = None #当前选中的属性行
+        self.datatypes = ['short', 'int', 'long long', 'float', 'string']
+        self.datasize = [2, 4, 8, 4, 9999]
 
         self.title("编辑属性")
         self.geometry('800x500')
 
-        if len(self.deriveattrs) > 0:
+        frame = ttk.Frame(self)
+        Label(frame, text="类名：").pack(side=LEFT, ipadx=5)
+        self.name_text = StringVar(value=clsitem.getName())
+        Entry(frame, textvariable=self.name_text).pack(side=LEFT, ipadx=5)
+        Button(frame, text="修改", command=self.on_modifyname).pack(side=LEFT, ipadx=5)
+        frame.pack(side=TOP)
+
+        deriveattrs = clsitem.get_attrs_r(False) #继承属性
+        if len(deriveattrs) > 0:
             frame0 = ttk.Frame(self)
             Label(frame0, text="继承属性：").pack(side=LEFT, ipadx=5)
             self.tv0 = ttk.Treeview(frame0, show='headings')
             self.tv0.pack(side=RIGHT, ipadx=5)
-            self.filltreeview(self.tv0, self.deriveattrs)
+            self.filltreeview(self.tv0, deriveattrs)
             frame0.pack(side=TOP, ipady=5)
 
         frame1 = ttk.Frame(self)
+        self.attrs = clsitem.attrs #自身属性
         Label(frame1, text="已有属性：").pack(side=LEFT, ipadx=5)
         self.tv = ttk.Treeview(frame1, show='headings')
         self.tv.pack(side=LEFT, ipadx=5)
@@ -35,13 +45,11 @@ class AttrEditor(Toplevel):
 
         frame2 = ttk.Frame(self)
         Label(frame2, text="属性名：").pack(side=LEFT, ipadx=5)
-        self.xls_text = StringVar()
-        xls = Entry(frame2, textvariable=self.xls_text)
-        self.xls_text.set(" ")
-        xls.pack(side=LEFT, ipadx=5)
+        self.xls_text = StringVar(value='')
+        Entry(frame2, textvariable=self.xls_text).pack(side=LEFT, ipadx=5)
 
         Label(frame2, text="类型：").pack(side=LEFT, ipadx=5)
-        self.comb_type = ttk.Combobox(frame2, values=['bool', 'short', 'int', 'long', 'float', 'string'])
+        self.comb_type = ttk.Combobox(frame2, values=self.datatypes)
         self.comb_type.pack(side=LEFT, ipadx=5)
         self.comb_type.current(0)
         self.comb_type.bind('<<ComboboxSelected>>', self.on_type_selected)
@@ -67,6 +75,15 @@ class AttrEditor(Toplevel):
                 treeview.insert(parent='', index='end', values=ele, tags='oushu')
             else:
                 treeview.insert(parent='', index='end', values=ele, tags='jishu')
+
+    def on_modifyname(self):
+        priname = self.clsitem.getName()
+        content = self.name_text.get()
+        if priname != content:
+            if len(content) > 0:
+                self.clsitem.setname(content)
+            else:
+                self.name_text.set(priname)
 
     def on_item_changed(self, event):
         item = self.tv.identify_row(event.y)
@@ -123,6 +140,7 @@ class AttrEditor(Toplevel):
             self.comb_size.config(values=size, state='normal')
             self.comb_size.current(0)
         else:
-            self.comb_size.config(values=[''], state='disabled')
+            val = '%s' % (self.datasize[self.comb_type.current()])
+            self.comb_size.config(values=[val], state='disabled')
             self.comb_size.current(0)
 

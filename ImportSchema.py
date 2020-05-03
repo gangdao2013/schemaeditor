@@ -25,12 +25,12 @@ class ImportSchema:
         data.pop(0)  # 忽略表头
         data.sort(key=itemgetter(0))
         x, y = 120, 100
-        hInterval = 20
+        hInterval = 50
         vInterval = 0
         for row in data:
-            if x > 800:
+            if x > 1200:
                 x = 120
-                y = y + vInterval + 30
+                y = y + vInterval + 50
                 vInterval = 0
             clsitem = Document.create_clsitem(row[0], (x, y))
             w,h = clsitem.get_size()
@@ -57,6 +57,7 @@ class ImportSchema:
                 continue
             for field in cache[tab]:
                 attr=['','','']
+                bass = False
                 for col in range(len(field)):
                     fldDescAttr = title[col]
                     if fldDescAttr == '列英文名称(COLUMN_NAME_ENG)':
@@ -69,8 +70,10 @@ class ImportSchema:
                         else:
                             print('表%s的字段%s没有匹配的字段类型%s' % (tab, field[1], field[col]))
                     elif fldDescAttr == '引用表名(R_TABLE_NAME)':
+                        bass = True
                         refclsitem = Document.get_cls_byname(field[col])
                         if refclsitem is not None:
-                                lnItem = Document.createLineItem(LineType.ass, 0, 0, 0, 0)
-                                Document.createLink(clsitem, refclsitem, lnItem)
-                clsitem.add_attr(attr)
+                            lnItem = Document.createLineItem(LineType.ass)
+                            Document.createLink(clsitem, refclsitem, lnItem)
+                if bass is False:
+                    clsitem.add_attr(attr)
