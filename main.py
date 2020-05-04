@@ -226,7 +226,8 @@ class MainWin(object):
             x = self.cv.canvasx(event.x)
             y = self.cv.canvasy(event.y)
             ids = list(self.cv.find_overlapping(x-1, y-1, x+1, y+1))
-            ids.remove(self.currLn.getItemId())
+            if self.currLn.getItemId() in ids:
+                ids.remove(self.currLn.getItemId())
             if len(ids) == 0: #未连接到图元，删除连接线
                 self.currLn.delMe()
             else:
@@ -240,11 +241,13 @@ class MainWin(object):
         if CurrState.mode == EditMode.select:
             return
         if self.startCls is not None:
+            x = self.cv.canvasx(event.x)
+            y = self.cv.canvasy(event.y)
             if self.currLn:
-                self.currLn.on_end_moved(self.startCls, event.x, event.y)
+                self.currLn.on_end_moved(self.startCls, x, y)
             else:
                 start = self.startCls.getAnchor()
-                self.currLn = self.createLineItem(start[0], start[1], event.x, event.y)
+                self.currLn = self.createLineItem(start[0], start[1], x, y)
 
     def on_save(self):
         Document.save()
