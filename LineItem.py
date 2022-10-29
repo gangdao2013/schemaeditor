@@ -9,11 +9,12 @@ class LineType(enum.Enum):
     ass=2
 
 class BaseLineItem(object):
-    def __init__(self, canvas, line_id):
+    def __init__(self, canvas, line_id, id):
         self._canvas = canvas
         self._lineId = line_id
         self.src = None
         self.dst = None
+        self.id = id
 
         canvas.tag_bind(self._lineId, "<Enter>", self.on_enter)
         canvas.tag_bind(self._lineId, "<Leave>", self.on_leave)
@@ -32,6 +33,9 @@ class BaseLineItem(object):
     @abstractmethod
     def type(self):
         pass
+
+    def getId(self):
+        return self.id
 
     def on_del(self):
         self.delMe()
@@ -98,10 +102,10 @@ class BaseLineItem(object):
 
 #派生连接线
 class DeriveLineItem(BaseLineItem):
-    def __init__(self, canvas,x1,y1,x2,y2):
+    def __init__(self, canvas, id, x1,y1,x2,y2):
         line = canvas.create_line(x1,y1,x2,y2,fill=self.color(), arrow=LAST,
-                                  arrowshape=(15, 15, 8), width=2)
-        BaseLineItem.__init__(self, canvas, line)
+                                  arrowshape=(15, 15, 8), width=1)
+        BaseLineItem.__init__(self, canvas, line, id)
 
     def type(self):
         return LineType.derive
@@ -111,10 +115,10 @@ class DeriveLineItem(BaseLineItem):
 
 #连接关系线
 class AssLineItem(BaseLineItem):
-    def __init__(self, canvas,x1,y1,x2,y2):
+    def __init__(self, canvas, id, x1,y1,x2,y2):
         line = canvas.create_line(x1,y1,x2,y2,fill=self.color(), arrow=LAST,
-                                  arrowshape=(8, 20, 8), width=2)
-        BaseLineItem.__init__(self, canvas, line)
+                                  arrowshape=(8, 20, 8), width=1)
+        BaseLineItem.__init__(self, canvas, line, id)
 
     def type(self):
         return LineType.ass

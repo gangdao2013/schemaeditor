@@ -11,12 +11,13 @@ from LineItem import LineType
 
 
 class ClsItem(object):
-    def __init__(self, Canvas, clsName, position):
+    def __init__(self, Canvas, clsName, position, clsId):
         self.x, self.y = 0, 0 #鼠标按下位置
         self.attrs = []
         self.__outLns = []  # 以本图元为起始的连接线
         self.__inLins = []  # 以本图元为终止的连接线
         self.__canvas=Canvas
+        self.clsId = clsId
         self.__txt = self.__canvas.create_text(position,text=clsName,fill='green', activefill='red')
         (x1,y1,x2,y2)=self.__canvas.bbox(self.__txt)
         self.__rect=self.__canvas.create_rectangle(x1-2,y1-2,x2+2,y2+2,fill='white', outline='black')
@@ -62,6 +63,9 @@ class ClsItem(object):
 
     def getName(self):
         return self.__canvas.itemcget(self.__txt, 'text')
+
+    def getId(self):
+        return self.clsId
 
     def setname(self, newname):
         self.__canvas.itemconfig(self.__txt, text=newname)

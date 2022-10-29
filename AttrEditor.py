@@ -9,11 +9,11 @@ class AttrEditor(Toplevel):
 
         self.clsitem = clsitem
         self.item = None #当前选中的属性行
-        self.datatypes = ['short', 'int', 'long long', 'float', 'datetime', 'string']
+        self.datatypes = ['short', 'int', 'long long', 'float', 'datetime', 'STRING']
         self.datasize = [2, 4, 8, 4, 8, 9999]
 
         self.title("编辑属性")
-        self.geometry('800x500')
+        self.geometry('900x600')
 
         frame = ttk.Frame(self)
         Label(frame, text="类名：").pack(side=LEFT, ipadx=5)
@@ -58,16 +58,21 @@ class AttrEditor(Toplevel):
         self.comb_size = ttk.Combobox(frame2, state='disabled')
         self.comb_size.pack(side=LEFT, ipadx=5)
 
+        Label(frame2, text="id：").pack(side=LEFT, ipadx=5)
+        self.xls_id = IntVar(value=-1)
+        Entry(frame2, textvariable=self.xls_id).pack(side=LEFT, ipadx=5)
+
         self.btn = Button(frame2, text="增加", command=self.on_edit)
         self.btn.pack(side=LEFT, ipadx=5)
         frame2.pack(side=TOP, ipady=5)
 
     @staticmethod
     def filltreeview(treeview, attrs):
-        treeview['columns'] = [0, 1, 2]
+        treeview['columns'] = [0, 1, 2, 3]
         treeview.heading(0, text='属性名')
         treeview.heading(1, text='字段类型')
         treeview.heading(2, text='字段大小')
+        treeview.heading(3, text='属性id')
         treeview.tag_configure('jishu', background='red')
         treeview.tag_configure('oushu', background='orange')
         for i,ele in enumerate(attrs):
@@ -89,6 +94,7 @@ class AttrEditor(Toplevel):
         item = self.tv.identify_row(event.y)
         if len(item) == 0:
             self.xls_text.set('')
+            self.xls_id.set('')
             self.comb_type.set('')
             self.comb_size.set('')
             self.btn['text'] = '增加'
@@ -100,6 +106,7 @@ class AttrEditor(Toplevel):
             self.xls_text.set(self.attrs[row][0])
             self.comb_type.set(self.attrs[row][1])
             self.comb_size.set(self.attrs[row][2])
+            self.xls_id.set(self.attrs[row][3])
             self.btn['text'] = '修改'
             self.item = item
             self.delBtn['state'] = 'normal'
@@ -119,7 +126,7 @@ class AttrEditor(Toplevel):
     def on_edit(self):
         attrname = self.xls_text.get()
         if len(attrname) > 0:
-            val = [attrname, self.comb_type.get(), self.comb_size.get()]
+            val = [attrname, self.comb_type.get(), self.comb_size.get(), self.xls_id.get()]
             if self.item is None:
                 self.attrs.append(val)
                 idx = len(self.attrs) - 1
@@ -133,7 +140,7 @@ class AttrEditor(Toplevel):
                 self.tv.item(self.item, values=val)
 
     def on_type_selected(self, event=None):
-        if self.comb_type.get() == 'string':
+        if self.comb_type.get() == 'STRING':
             size=[1]
             for i in range(4, 12):
                 size.append((1 << i) - 1)
